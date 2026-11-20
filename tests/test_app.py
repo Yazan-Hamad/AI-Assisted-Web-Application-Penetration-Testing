@@ -1,11 +1,11 @@
 """
-End-to-end tests of the Streamlit app (app/app.py): every feature is driven the way a user
-drives it -- choosing examples, typing requests, clicking buttons, uploading files, switching
-detectors -- with Streamlit's AppTest harness. No browser or server is needed.
+End-to-end tests of the Streamlit app (app/app.py). Streamlit's AppTest harness drives every
+feature the way a user does (choosing examples, typing requests, clicking buttons, uploading
+files, switching detectors). No browser or server is needed.
 
 Run:  python -m pytest tests/test_app.py -v
 The manual test plan for the same features is in tests/APP_TEST_PLAN.md (IDs A1..D3 match).
-Needs the trained models (models/ is not committed): run src/run_all.py first.
+Needs the trained models in models/. They are committed; src/run_all.py regenerates them.
 """
 import json
 import sys
@@ -161,12 +161,11 @@ def test_C3_file_without_requests_warns():
     assert metrics(t) == {}
 
 
-@pytest.mark.xfail(strict=True, reason="known issue: a malformed CSV crashes with a pandas traceback "
-                                        "instead of a friendly message")
 def test_C4_malformed_csv_shows_a_friendly_error():
     at = fresh()
     at.tabs[TRAFFIC].file_uploader[0].upload("malformed.csv", (FIX / "malformed.csv").read_bytes()).run()
     no_errors(at)
+    assert any("Could not read" in e.value for e in at.tabs[TRAFFIC].error)
 
 
 @pytest.fixture(scope="module")

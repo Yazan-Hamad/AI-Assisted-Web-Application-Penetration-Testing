@@ -5,9 +5,9 @@
 0b. P. Wang and H. D'Cruze, "AI-assisted pentesting using ChatGPT-4," in *ITNG 2024*, Advances in Intelligent Systems and Computing, vol. 1456, Springer, 2024, pp. 63–71, doi: 10.1007/978-3-031-56599-1_9. **ChatGPT-4 with LlamaIndex over Nmap and Wireshark output against bWAPP. Qualitative results only. Related work and discussion.**
 0c. P. S. Khairmode, C. Maivizhi, Raghavendra S, P. J. Sai, and S. R. M. Krishna, "AutoRed APT: Automated penetration testing tool for web applications," in *Proc. ICOSICS 2026*, IEEE, 2026, pp. 2061–2068, doi: 10.1109/ICOSICS70095.2026.11746828. **Nmap, Vulners and CVE-based retrieval feeding an LLM, with no exploitation. Related work and discussion.**
 
-Taken from the review's bibliography (not read in full):
-0d. M. Irfa'issurur and B. P. Josaphat, "Machine learning for cybersecurity: Web attack detection (brute force, XSS, SQL injection)," *InPrime: Indonesian J. Pure Appl. Math.*, vol. 7, no. 1, pp. 1–15, 2025. **RF 97.77% on CIC-IDS2017/2018 web attacks.**
-0e. A. Kim, M. Park, and D. H. Lee, "AI-IDS: Application of deep learning to real-time web intrusion detection," *IEEE Access*, vol. 8, pp. 70245–70261, 2020, doi: 10.1109/ACCESS.2020.2986882.
+Cited through the review's bibliography. The claims the paper makes about them match each paper's abstract:
+0d. M. Irfa'issurur and B. P. Josaphat, "Machine learning for cybersecurity: Web attack detection (brute force, XSS, SQL injection)," *InPrime: Indonesian J. Pure Appl. Math.*, vol. 7, no. 1, pp. 1–15, 2025, doi: 10.15408/inprime.v7i1.41025. **Abstract: CICIDS2017 and CSE-CICIDS2018; KNN, RF, Naive Bayes, AdaBoost, LightGBM, XGBoost; SMOTE + PCA; best RF with accuracy 97.77%, precision 84.07%, recall 91.96%, F1 87.28%.**
+0e. A. Kim, M. Park, and D. H. Lee, "AI-IDS: Application of deep learning to real-time web intrusion detection," *IEEE Access*, vol. 8, pp. 70245–70261, 2020, doi: 10.1109/ACCESS.2020.2986882. **Abstract: CNN-LSTM over normalised UTF-8 encoded HTTP traffic; evaluated on CSIC 2010, CICIDS2017 and real-time traffic.**
 
 ## Datasets
 1. I. Sharafaldin, A. H. Lashkari, and A. A. Ghorbani, "Toward generating a new intrusion detection dataset and intrusion traffic characterization," in *Proc. 4th Int. Conf. Information Systems Security and Privacy (ICISSP)*, 2018, pp. 108–116. **CIC-IDS2017, the main dataset.**
@@ -35,7 +35,7 @@ Taken from the review's bibliography (not read in full):
 ## AI-assisted penetration testing
 15. G. Deng et al., "PentestGPT: Evaluating and harnessing large language models for automated penetration testing," in *Proc. 33rd USENIX Security Symposium*, 2024, pp. 847–864.
 16. X. Shen, L. Wang, Z. Li, Y. Chen, W. Zhao, D. Sun, J. Wang, and W. Ruan, "PentestAgent: Incorporating LLM agents to automated penetration testing," in *Proc. ACM Asia Conf. Computer and Communications Security (ASIA CCS)*, 2025, doi: 10.1145/3708821.3733882.
-17. Y. Guo, L. Yu, S. Li, M. Zhou, and G. Chu, "Decoupling reconnaissance and exploitation: Measuring the capability boundaries of LLM-based web penetration testing," in *Proc. ICIC 2026*, LNCS vol. 16652, Springer, 2026, pp. 607–618.
+17. L. Yu, S. Li, M. Zhou, G. Chu, and Y. Guo, "Decoupling reconnaissance and exploitation: Measuring the capability boundaries of LLM-based web penetration testing," in *Proc. ICIC 2026*, LNCS vol. 16652, Springer, 2026, pp. 607–618.
 
 ## Method and pitfalls
 18. D. Arp et al., "Dos and don'ts of machine learning in computer security," in *Proc. 31st USENIX Security Symposium*, 2022.
