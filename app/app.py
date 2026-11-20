@@ -48,9 +48,21 @@ EXAMPLES = {
 st.set_page_config(page_title="AI-Assisted Web Pentest", page_icon="🛡️", layout="wide")
 
 
+def require_model(path) -> None:
+    if not path.exists():
+        st.error(f"Model file `models/{path.name}` is missing. Train it with "
+                 "`cd src && python run_all.py --skip-download` (see the README).")
+        st.stop()
+
+
 @st.cache_resource
-def analyzer() -> Analyzer:
+def _load_analyzer() -> Analyzer:
     return Analyzer.load()
+
+
+def analyzer() -> Analyzer:
+    require_model(config.MODELS_DIR / "webreq_prototype.joblib")
+    return _load_analyzer()
 
 
 # ------------------------------------------------------------------ input parsing
@@ -87,7 +99,7 @@ def parse_upload(name: str, data: bytes) -> tuple[list[Request], list | None]:
             truth = [lab_truth(r) for r in recs]
         return [Request.from_dict(r) for r in recs], truth
     if name.endswith(".csv"):
-        df = pd.read_csv(io.StringIO(text)).fillna("")
+        df = pd.read_csv(io.StringIO(text), dtype=str, keep_default_na=False)
         cols = {c.lower(): c for c in df.columns}
         reqs = []
         for _, r in df.iterrows():
@@ -173,7 +185,13 @@ def tab_traffic():
         src = st.session_state["traffic"]
     if not src:
         return
-    reqs, truth = parse_upload(*src)
+    try:
+        reqs, truth = parse_upload(*src)
+    except Exception as e:                       # malformed CSV / HAR / JSON
+        st.error(f"Could not read `{src[0]}`: {type(e).__name__}: {e}. "
+                 "Check that the file is a valid CSV (quote fields that contain commas), HAR, "
+                 "JSON lines, raw HTTP requests or an access log.")
+        return
     if not reqs:
         st.warning("No requests found in the file.")
         return
@@ -239,6 +257,8 @@ def tab_flows():
     st.caption(f"{len(X):,} flows · format {rep['style']} · features matched {rep['matched']}/{len(feats)}")
     det = st.selectbox("Detector", config.ML_MODELS, index=config.ML_MODELS.index("xgb"),
                        format_func=lambda k: config.DISPLAY[k])
+    require_model(config.MODELS_DIR / f"binary_{det}.joblib")
+    require_model(config.MODELS_DIR / f"mc_{det}.joblib")
     bm = joblib.load(config.MODELS_DIR / f"binary_{det}.joblib")
     mc = joblib.load(config.MODELS_DIR / f"mc_{det}.joblib")
     out = pd.DataFrame({"attack score": M.attack_score(bm, X), "attack": bm.predict(X), "class": mc.predict(X)})
@@ -257,7 +277,7 @@ def tab_flows():
 # ------------------------------------------------------------------ tab 4
 def _table(path: Path, title: str, note: str = ""):
     if path.exists():
-        st.markdown(f"**{title}**" + (f" — {note}" if note else ""))
+        st.markdown(f"**{title}**" + (f": {note}" if note else ""))
         st.dataframe(pd.read_csv(path), hide_index=True, width="stretch")
 
 

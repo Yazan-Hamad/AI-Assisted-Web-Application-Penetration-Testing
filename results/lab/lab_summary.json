@@ -534,5 +534,39 @@
     "Job report finished, time taken: 00:00:00",
     "Automation plan succeeded!"
   ],
-  "lab_duration_minutes": 4.6
+  "lab_duration_minutes": 4.6,
+  "priority_check": {
+    "entries": 166,
+    "risk_levels": {
+      "Medium": 85,
+      "High": 81
+    },
+    "corr_priority_log_requests": 0.9706,
+    "confirmed_best_rank": [
+      {
+        "alert": "External Redirect",
+        "endpoint": "GET /redirect",
+        "param": "to",
+        "best_rank": 18
+      },
+      {
+        "alert": "Path Traversal",
+        "endpoint": "PUT /api/BasketItems/{id}",
+        "param": "quantity",
+        "best_rank": 23
+      },
+      {
+        "alert": "SQL Injection",
+        "endpoint": "GET /rest/products/search",
+        "param": "q",
+        "best_rank": 27
+      },
+      {
+        "alert": "SQL Injection",
+        "endpoint": "POST /rest/user/login",
+        "param": "email",
+        "best_rank": 26
+      }
+    ]
+  }
 }

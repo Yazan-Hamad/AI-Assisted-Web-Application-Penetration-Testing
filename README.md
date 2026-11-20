@@ -13,8 +13,6 @@ The project works at three levels:
 | **HTTP requests** | HTTP CSIC 2010, HttpParamsDataset, SR-BH 2020, and a combined dataset | URL/parameter/header/content features, engineered features, a learned app profile, char n-gram NLP model, hybrid | 31 signature rules modelled on the OWASP CRS |
 | **Live lab** | OWASP Juice Shop + benign shoppers + OWASP ZAP active scan | prototype that scores each parameter value, names the attack, assigns risk and ranks endpoints | OWASP ZAP findings and the signature rules |
 
----
-
 ## Key results
 
 | Setting | Best AI | Conventional |
@@ -24,6 +22,7 @@ The project works at three levels:
 | CSIC 2010 requests, de-duplicated (held-out F1) | hybrid **0.995**, char-SVM 0.994, XGBoost 0.993 | signatures 0.339 |
 | HttpParams attack type (macro-F1, 5 classes) | char-SVM **0.999** | signatures 0.789 |
 | Juice Shop lab, payload-bearing ZAP requests (recall SQLi / XSS / traversal / cmd) | **0.95 / 0.94 / 0.82 / 0.79** at 0.45% false alarms | signatures 0.73 / 0.94 / 0.32 / 0.39 at 0% |
+| … all ZAP attack requests, including payload-free probes | 0.84 / 0.31 / 0.75 / 0.77 | signatures 0.65 / 0.31 / 0.20 / 0.40 |
 
 **Are the accuracies real?** ([`webreq/sanity.py`](src/webreq/sanity.py))
 
@@ -56,8 +55,6 @@ The project works at three levels:
   <img src="results/figures/fig12_lab.png" width="850">
 </p>
 
----
-
 ## Repository layout
 
 ```
@@ -82,9 +79,12 @@ The project works at three levels:
 │   ├── lab/                 live lab: setup_tools, run_lab, logging proxy, benign shoppers, compare
 │   ├── make_figures.py · run_all.py
 ├── app/app.py               Streamlit UI (analyse a request, analyse traffic, flow IDS, results)
+├── app/samples/             demo traffic and a CICFlowMeter sample for the UI (built by app/make_samples.py)
+├── models/                  trained models loaded by the UI (the pipeline regenerates them)
+├── notebooks/walkthrough.ipynb   walkthrough of the flow-level part (needs the downloaded CIC-IDS2017 data)
 ├── results/                 metrics JSON, CSV tables, figures; webreq/ and lab/ sub-folders
 ├── paper/main.tex           IEEE conference paper (compile with tectonic or pdflatex)
-└── tests/                   pytest: flow-column mapping + request features/analyzer
+└── tests/                   pytest: flow-column mapping, request features/analyzer, Streamlit app (APP_TEST_PLAN.md)
 ```
 
 ## Quick start
@@ -99,7 +99,7 @@ python -m webreq.unified                   # combined dataset (downloads SR-BH 2
 python -m pytest ../tests -q
 ```
 
-**User interface:** `streamlit run app/app.py` (from the repository root). Paste a raw HTTP request, or upload proxy logs, HAR, CSV, raw requests or an access log; the **demo** button loads ZAP traffic from the lab run. The UI also scores CICFlowMeter CSVs.
+**User interface:** `streamlit run app/app.py` (from the repository root). The trained models the app needs are included in `models/`, so it runs straight after cloning. Paste a raw HTTP request, or upload proxy logs, HAR, CSV, raw requests or an access log; the **demo** button loads ZAP traffic from the lab run. The UI also scores CICFlowMeter CSVs.
 
 **Live lab** (about 1 hour; authorised local use only, everything binds to 127.0.0.1):
 
@@ -128,7 +128,7 @@ Everything is seeded (`RANDOM_STATE = 42`).
   - Headers: content-bearing headers only. Tool and session headers such as User-Agent, Cookie and X-ZAP-Scan-ID are never input.
   - Content: special characters, entropy, SQL/XSS/cmd/traversal/SSI keywords.
 - **Engineered features**: special-character runs, function calls, class switches, obfuscation, mixed-case keywords, keyword density, tokens, non-alphanumeric ratio, URLs in values.
-- **Learned profile** (Kruegel & Vigna style): per endpoint and parameter, learns normal length, characters and character classes from benign training data. It is decisive on CSIC (XGBoost 0.879 → 0.990) but fails on an open-world site such as SR-BH.
+- **Learned profile** (Kruegel & Vigna style): per endpoint and parameter, learns normal length, characters and character classes from benign training data. It lifts XGBoost on CSIC from 0.879 to 0.990 but fails on an open-world site such as SR-BH.
 - **Regularisation**: inner 3-fold CV on the training split only.
   - LR: L1/L2/elastic net and C.
   - RF: depth and features per split. The overfitting gap halved.
@@ -144,7 +144,8 @@ Everything is seeded (`RANDOM_STATE = 42`).
 - Brute force and access-control abuse leave no payload in a single request, so they need session-level features.
 - CSIC is generated traffic.
 - SR-BH needed heavy label cleaning.
-- The lab used one application and one scanner.
+- The lab is a single run with one application and one scanner, so it has no variance estimate. Recall on payload-bearing requests is an upper bound, because the payload filter and the detectors both look at characters.
+- The endpoint ranking contains every injection flaw ZAP confirmed (top 27 of 166), but it follows attack volume (correlation 0.97). It shows where attacks were aimed, not which parameters are vulnerable.
 - Adaptive payload rewriting was not modelled.
 
 ## Responsible use

@@ -235,6 +235,38 @@ def zap_coverage(d: pd.DataFrame, z: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def priority_check(prio: pd.DataFrame, z: pd.DataFrame) -> dict:
+    """How informative is the AI priority list? (a) how closely it follows the attack volume
+    (priority = max risk x log(1 + requests)); (b) the best rank of each endpoint+parameter
+    where ZAP confirmed an injection vulnerability."""
+    if prio.empty:
+        return {}
+    p = prio.reset_index(drop=True)
+    p["rank"] = np.arange(1, len(p) + 1)
+    out = {"entries": len(p),
+           "risk_levels": {k: int(v) for k, v in p["risk_level"].value_counts().items()},
+           "corr_priority_log_requests": round(float(np.corrcoef(np.log1p(p["requests"]), p["priority"])[0, 1]), 4),
+           "confirmed_best_rank": []}
+    if not z.empty:
+        zi = z[z["plugin"].map(lambda q: PLUGIN_CATEGORY.get(q) in CORE + ["other-injection"])]
+        for _, r in zi.drop_duplicates(["plugin", "endpoint", "param"]).iterrows():
+            m = (p["endpoint"] == r["endpoint"]) & (p["parameter"].str.split(":", n=1).str[-1] == r["param"])
+            out["confirmed_best_rank"].append({"alert": r["alert"], "endpoint": r["endpoint"], "param": r["param"],
+                                               "best_rank": int(p.loc[m, "rank"].min()) if m.any() else None})
+    return out
+
+
+def update_priority_check():
+    """Add the priority check to an existing results/lab/lab_summary.json from the saved
+    tables, without re-scoring (re-scoring would also re-measure the timing)."""
+    prio = pd.read_csv(OUT / "table_lab_ai_priorities.csv")
+    z = pd.read_csv(OUT / "zap_alerts.csv") if (OUT / "zap_alerts.csv").exists() else pd.DataFrame()
+    s = json.loads((OUT / "lab_summary.json").read_text())
+    s["priority_check"] = priority_check(prio, z)
+    (OUT / "lab_summary.json").write_text(json.dumps(s, indent=2, default=str))
+    print(json.dumps(s["priority_check"], indent=2))
+
+
 def examples(d: pd.DataFrame, n=8) -> dict:
     def fmt(r):
         q = f"?{r['query']}" if r["query"] else ""
@@ -288,6 +320,7 @@ def run(run_dir: Path):
         "zap": zap_summary,
         "zap_injection_coverage": cov.to_dict(orient="records"),
         "ai_top_priorities": prio.head(15).to_dict(orient="records"),
+        "priority_check": priority_check(prio, z),
         "examples": examples(d),
         "zap_log_tail": log.splitlines()[-15:],
         "lab_duration_minutes": round(float(ts.max() - ts.min()) / 60, 1),
@@ -315,4 +348,7 @@ def latest_run() -> Path:
 
 
 if __name__ == "__main__":
-    run(Path(sys.argv[1]) if len(sys.argv) > 1 else latest_run())
+    if sys.argv[1:] == ["--priority-check"]:
+        update_priority_check()
+    else:
+        run(Path(sys.argv[1]) if len(sys.argv) > 1 else latest_run())
